@@ -2,6 +2,34 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class NameValidator {
+  static Map<String, List<String>> validateAndFilterNames(List<String> names) {
+    Set<String> seenNames = {};
+    Set<String> seenInitials = {};
+    List<String> filtered = [];
+    List<String> rejected = [];
+
+    for (String name in names) {
+      String trimmed = name.trim();
+      String initials = trimmed
+          .split(' ')
+          .where((part) => part.isNotEmpty)
+          .map((part) => part[0].toUpperCase())
+          .join();
+
+      if (!seenNames.contains(trimmed) && !seenInitials.contains(initials)) {
+        seenNames.add(trimmed);
+        seenInitials.add(initials);
+        filtered.add(trimmed);
+      } else {
+        rejected.add(trimmed);
+      }
+    }
+
+    return {'filtered': filtered, 'rejected': rejected};
+  }
+}
+
 class RosterGenerator {
   final int year;
   final int month;
@@ -79,10 +107,10 @@ class RosterGenerator {
             remainingWorkStreak[person] = 2 + random.nextInt(2);
           }
 
-          remainingWorkStreak[person] = (remainingWorkStreak[person] ?? 0) - 1;
+          remainingWorkStreak[person] = remainingWorkStreak[person]! - 1;
 
           if (shift == 'Night') {
-            restUntilDay[person] = day + 1; // Mandatory rest after Night
+            restUntilDay[person] = day + 1;
             consecutiveNightShifts[person] = consecutiveNightShifts[person]! + 1;
           } else {
             consecutiveNightShifts[person] = 0;
@@ -125,13 +153,11 @@ class RosterGenerator {
               remainingWorkStreak[person] = 2 + random.nextInt(2);
             }
 
-            remainingWorkStreak[person] =
-                (remainingWorkStreak[person] ?? 0) - 1;
+            remainingWorkStreak[person] = remainingWorkStreak[person]! - 1;
 
             if (shift == 'Night') {
-              restUntilDay[person] = day + 1; // Mandatory rest after Night
-              consecutiveNightShifts[person] =
-                  consecutiveNightShifts[person]! + 1;
+              restUntilDay[person] = day + 1;
+              consecutiveNightShifts[person] = consecutiveNightShifts[person]! + 1;
             } else {
               consecutiveNightShifts[person] = 0;
             }
@@ -140,8 +166,7 @@ class RosterGenerator {
               int extraRest = (lastShift[person] == 'Night')
                   ? max(2, consecutiveNightShifts[person]!)
                   : 1;
-              restUntilDay[person] =
-                  max(restUntilDay[person]!, day + extraRest);
+              restUntilDay[person] = max(restUntilDay[person]!, day + extraRest);
             }
 
             shiftHistory[person] = shiftHistory[person]! + 1;
